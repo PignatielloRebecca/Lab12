@@ -1,9 +1,17 @@
 import networkx as nx
+from database.dao import DAO
 
 class Model:
     def __init__(self):
+        self._lista_rifugio = []
+
+
+
         """Definire le strutture dati utili"""
         # TODO
+
+    def _getRifugio(self):
+        self._lista_rifugi =DAO.readRifugio()
 
     def build_weighted_graph(self, year: int):
         """
