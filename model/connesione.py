@@ -5,8 +5,11 @@ from dataclasses import dataclass
 class Connessione:
     r1:Rifugio
     r2:Rifugio
-    distanza: int
+    distanza: float
     difficolta:str
+    peso: int
+
+
 
 
 

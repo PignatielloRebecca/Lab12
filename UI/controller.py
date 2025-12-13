@@ -46,6 +46,9 @@ class Controller:
         self._view.lista_visualizzazione_2.controls.append(ft.Text(f"Archi < {soglia}: {minori}, Archi > {soglia}: {maggiori}"))
         self._view.page.update()
 
+    def handle_cammino_minimo(self):
+        pass
+
     """Implementare la parte di ricerca del cammino minimo"""
     # TODO
 
