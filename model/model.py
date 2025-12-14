@@ -66,63 +66,57 @@ class Model:
         return archi_minori_soglia, archi_maggiori_soglia
         # TODO
 
+    def _cammino_minimo(self, soglia):
+        a=self._cammino_minimo_ricorsione(soglia)
+        b=self._cammino_minimo_nx(soglia)
 
-    def cammino_minimo(self, nodo_sorgente):
-        self._cammino_minimo=[]
-        self._rifugi_visitati=set()
-        self._costo_minimo=0
-        lista_vicini=[]
+        return a
 
-        nodo_iniziale= self._dizionario_rifugio[nodo_sorgente.id]
-        self._rifugi_visitati.add(nodo_sorgente)
+    def _cammino_minimo_ricorsione(self, soglia):
+        self._cammino_migliore=[]
+        self._costo_minimo=100000
+        for nodo in self.G.nodes:
+            self.__ricorsione(nodo_corrente=nodo, lista_rifugi=[nodo], costo_corrente=0, soglia=soglia)
 
-        vicini=self.G.neighbors(nodo_iniziale)
-        for vicino in vicini:
-            lista_vicini.append(vicino)
-            self.__ricorsione(vicino, lista_vicini)
-        pass
-    def __ricorsione(self, nodo_corrente,lista_parziale, costo_corrente, soglia):
+        return self._cammino_migliore
 
-        if nodo_corrente in self._rifugi_visitati and costo_corrente> self._costo_minimo:
-            self._cammino_minimo=lista_parziale.copy()
+
+    def __ricorsione(self, nodo_corrente,lista_rifugi, costo_corrente, soglia):
+
+        if costo_corrente>= self._costo_minimo:
+            return
+
+        if len(lista_rifugi)>=3 and costo_corrente < self._costo_minimo:
+            self._cammino_migliore=lista_rifugi.copy()
             self._costo_minimo=costo_corrente
 
-            return
+        for vicino in self.G.neighbors(nodo_corrente):
+            if vicino not in lista_rifugi:
+                peso=self.G[nodo_corrente][vicino]['peso']
 
-        else:
-            costo_corrente=0
-            self._rifugi_visitati.add(nodo_corrente)
+                if peso >soglia:
+                    lista_rifugi.append(vicino)
+                    self.__ricorsione(vicino, lista_rifugi, costo_corrente+ peso, soglia)
+                    lista_rifugi.pop()
 
-            if self._vincoli(lista_parziale,soglia, costo_corrente) is not None:
+    def _cammino_minimo_nx(self,soglia):
 
+        cammino_migliore=[]
+        costo_minimo=1000000
 
-                for vicino in self.G.neighbors(nodo_corrente):
-                    if vicino not in self._rifugi_visitati:
-                        lista_parziale.append(vicino)
-                        for u,v, attr in self.G.edges(vicino):
-                            costo_corrente+=attr['peso']
+        grafo_filtrato=nx.Graph()
+        for u,v, attr in self.G.edges(data=True):
+            if attr['peso'] > soglia:
+                grafo_filtrato.add_edge(u, v, peso=attr['peso'])
 
-                            self.__ricorsione(vicino,lista_parziale)
-
-                    lista_parziale.pop()
-
-
-
-
-
-
-
-    def _vincoli(self, lista_parziale, soglia, costo_corrente):
-        if len(lista_parziale)<2:
-            return
-        if costo_corrente<soglia:
-            return
-
-
-
-
-
-
+        for sorgente, cammino_minimo in nx.all_pairs_dijkstra_path(grafo_filtrato, weight='peso'):
+            for target, percorso in cammino_minimo.items():
+                if len(percorso)>=3:
+                    costo=nx.path_weight(grafo_filtrato, percorso, weight='peso')
+                    if costo< costo_minimo:
+                        costo_minimo=costo
+                        cammino_migliore=percorso
+        return cammino_migliore
 
     """Implementare la parte di ricerca del cammino minimo"""
     # TODO

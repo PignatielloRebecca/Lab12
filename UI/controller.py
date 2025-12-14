@@ -46,9 +46,29 @@ class Controller:
         self._view.lista_visualizzazione_2.controls.append(ft.Text(f"Archi < {soglia}: {minori}, Archi > {soglia}: {maggiori}"))
         self._view.page.update()
 
-    def handle_cammino_minimo(self):
-        pass
+    def handle_cammino_minimo(self, e):
+        try:
+            soglia = float(self._view.txt_soglia.value)
+        except:
+            self._view.show_alert("Inserisci un numero valido per la soglia.")
+            return
 
-    """Implementare la parte di ricerca del cammino minimo"""
+        cammino = self._model._cammino_minimo(soglia)
+        self._view.lista_visualizzazione_3.controls.clear()
+        if cammino:
+            for i in range(len(cammino) - 1):
+                u = cammino[i]
+                v = cammino[i + 1]
+                peso = self._model.G[u][v]['peso']
+                self._view.lista_visualizzazione_3.controls.append(
+                    ft.Text(f"[{u.id}] {u.nome} ({u.localita}) --> [{v.id}] {v.nome} ({v.localita}) [peso: {peso}]")
+                )
+        else:
+            self._view.lista_visualizzazione_3.controls.append(
+                ft.Text("[]")
+            )
+        self._view.page.update()
+
     # TODO
+
 
