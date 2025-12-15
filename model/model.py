@@ -78,22 +78,22 @@ class Model:
 
     def _cammino_minimo_ricorsione(self, soglia):
         self._cammino_migliore=[]
-        self._costo_minimo=100000
+        self._peso_minimo=100000
         # per ogni nodo, richiamo la ricorsione
         for nodo in self.G.nodes:
-            self.__ricorsione(nodo_corrente=nodo, lista_rifugi=[nodo], costo_corrente=0, soglia=soglia)
+            self.__ricorsione(nodo_corrente=nodo, lista_rifugi=[nodo], peso_corrente=0, soglia=soglia)
 
         return self._cammino_migliore
 
 
-    def __ricorsione(self, nodo_corrente,lista_rifugi, costo_corrente, soglia):
+    def __ricorsione(self, nodo_corrente,lista_rifugi, peso_corrente, soglia):
 
-        if costo_corrente>= self._costo_minimo:
+        if peso_corrente>= self._peso_minimo:
             return
 
-        if len(lista_rifugi)>=3 and costo_corrente < self._costo_minimo: # vincoli
+        if len(lista_rifugi)>=3 and peso_corrente < self._peso_minimo: # vincoli
             self._cammino_migliore=copy.deepcopy(lista_rifugi)
-            self._costo_minimo=costo_corrente
+            self._peso_minimo=peso_corrente
 
         for vicino in self.G.neighbors(nodo_corrente):
             if vicino not in lista_rifugi: # non torno su un nodo già visitato
@@ -101,13 +101,13 @@ class Model:
 
                 if peso >soglia:
                     lista_rifugi.append(vicino)
-                    self.__ricorsione(vicino, lista_rifugi, costo_corrente+ peso, soglia)
+                    self.__ricorsione(vicino, lista_rifugi, peso_corrente+ peso, soglia)
                     lista_rifugi.pop() # backtracking
 
     def _cammino_minimo_nx(self,soglia):
 
         cammino_migliore=[]
-        costo_minimo=1000000
+        peso_minimo=1000000
 
         # lavoro con grafi che rispettano la soglia
         grafo_filtrato=nx.Graph()
@@ -119,9 +119,9 @@ class Model:
             for nodo_destinazione, percorso in cammino_minimo.items(): # la funzione restituisce un dizionario annidato: per ogni nodo sorgente (chiave), il valore è un dizionario
                                                                         # dove le chiavi sono i nodi di arrivo (target) e il valore è una lista di nodi (percorso)
                 if len(percorso)>=3: # scarto i cammini con meno di 3 nodi
-                    costo=nx.path_weight(grafo_filtrato, percorso, weight='peso') # calcola il peso totale del percorso sommando il peso di tutti gli archi consecutivi
-                    if costo< costo_minimo:
-                        costo_minimo=costo # mi salvo il costo minimo
+                    peso_totale=nx.path_weight(grafo_filtrato, percorso, weight='peso') # calcola il peso totale del percorso sommando il peso di tutti gli archi consecutivi
+                    if peso_totale< peso_minimo:
+                        peso_minimo=peso_totale # mi salvo il peso minimo
                         cammino_migliore=percorso # aggiorno il cammino migliore
         return cammino_migliore
 
