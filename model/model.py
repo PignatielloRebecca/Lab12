@@ -1,5 +1,6 @@
 import networkx as nx
 from database.dao import DAO
+import copy
 
 class Model:
     def __init__(self):
@@ -25,9 +26,11 @@ class Model:
         """
         connessioni = DAO.readConnessioni(self._dizionario_rifugio,year)
         for c in connessioni:
+            #nodi
             self.G.add_nodes_from([c.r1, c.r2])
 
         for c in connessioni:
+            #archi
             self.G.add_edge(c.r1, c.r2, peso=c.peso)
 
 
@@ -71,10 +74,12 @@ class Model:
         b=self._cammino_minimo_nx(soglia)
 
         return a
+        # return b per usare nx
 
     def _cammino_minimo_ricorsione(self, soglia):
         self._cammino_migliore=[]
         self._costo_minimo=100000
+        # per ogni nodo, richiamo la ricorsione
         for nodo in self.G.nodes:
             self.__ricorsione(nodo_corrente=nodo, lista_rifugi=[nodo], costo_corrente=0, soglia=soglia)
 
@@ -86,36 +91,38 @@ class Model:
         if costo_corrente>= self._costo_minimo:
             return
 
-        if len(lista_rifugi)>=3 and costo_corrente < self._costo_minimo:
-            self._cammino_migliore=lista_rifugi.copy()
+        if len(lista_rifugi)>=3 and costo_corrente < self._costo_minimo: # vincoli
+            self._cammino_migliore=copy.deepcopy(lista_rifugi)
             self._costo_minimo=costo_corrente
 
         for vicino in self.G.neighbors(nodo_corrente):
-            if vicino not in lista_rifugi:
+            if vicino not in lista_rifugi: # non torno su un nodo già visitato
                 peso=self.G[nodo_corrente][vicino]['peso']
 
                 if peso >soglia:
                     lista_rifugi.append(vicino)
                     self.__ricorsione(vicino, lista_rifugi, costo_corrente+ peso, soglia)
-                    lista_rifugi.pop()
+                    lista_rifugi.pop() # backtracking
 
     def _cammino_minimo_nx(self,soglia):
 
         cammino_migliore=[]
         costo_minimo=1000000
 
+        # lavoro con grafi che rispettano la soglia
         grafo_filtrato=nx.Graph()
         for u,v, attr in self.G.edges(data=True):
             if attr['peso'] > soglia:
                 grafo_filtrato.add_edge(u, v, peso=attr['peso'])
 
-        for sorgente, cammino_minimo in nx.all_pairs_dijkstra_path(grafo_filtrato, weight='peso'):
-            for target, percorso in cammino_minimo.items():
-                if len(percorso)>=3:
-                    costo=nx.path_weight(grafo_filtrato, percorso, weight='peso')
+        for sorgente, cammino_minimo in nx.all_pairs_dijkstra_path(grafo_filtrato, weight='peso'): # per ogni nodo sorgente, calcola il cammino minimo verso tutti gli altri nodi
+            for nodo_destinazione, percorso in cammino_minimo.items(): # la funzione restituisce un dizionario annidato: per ogni nodo sorgente (chiave), il valore è un dizionario
+                                                                        # dove le chiavi sono i nodi di arrivo (target) e il valore è una lista di nodi (percorso)
+                if len(percorso)>=3: # scarto i cammini con meno di 3 nodi
+                    costo=nx.path_weight(grafo_filtrato, percorso, weight='peso') # calcola il peso totale del percorso sommando il peso di tutti gli archi consecutivi
                     if costo< costo_minimo:
-                        costo_minimo=costo
-                        cammino_migliore=percorso
+                        costo_minimo=costo # mi salvo il costo minimo
+                        cammino_migliore=percorso # aggiorno il cammino migliore
         return cammino_migliore
 
     """Implementare la parte di ricerca del cammino minimo"""

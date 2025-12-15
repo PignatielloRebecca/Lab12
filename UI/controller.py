@@ -53,20 +53,19 @@ class Controller:
             self._view.show_alert("Inserisci un numero valido per la soglia.")
             return
 
-        cammino = self._model._cammino_minimo(soglia)
+        lista_nodi = self._model._cammino_minimo(soglia)
         self._view.lista_visualizzazione_3.controls.clear()
-        if cammino:
-            for i in range(len(cammino) - 1):
-                u = cammino[i]
-                v = cammino[i + 1]
-                peso = self._model.G[u][v]['peso']
+
+        # il cammino minimo trovato è una lista di nodi, bisogna stampare gli archi consecutivi
+        if lista_nodi:
+            for i in range(0, len(lista_nodi) - 1):
+                u = lista_nodi[i]
+                v = lista_nodi[i + 1]
+                peso = self._model.G[u][v]['peso'] # prendo il valore del peso di quell'arco
                 self._view.lista_visualizzazione_3.controls.append(
-                    ft.Text(f"[{u.id}] {u.nome} ({u.localita}) --> [{v.id}] {v.nome} ({v.localita}) [peso: {peso}]")
-                )
+                    ft.Text(f"[{u.id}] {u.nome} ({u.localita}) --> [{v.id}] {v.nome} ({v.localita}) [peso: {peso}]"))
         else:
-            self._view.lista_visualizzazione_3.controls.append(
-                ft.Text("[]")
-            )
+            self._view.lista_visualizzazione_3.controls.append(ft.Text("[]"))
         self._view.page.update()
 
     # TODO
